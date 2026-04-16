@@ -40,8 +40,7 @@
 - MATLAB
 - EEGLAB
 - EEG 原始数据为 `.cnt` 格式
-- 电极定位文件存在：
-  - `F:\CJZFile\EEG_M1\standard_1005.ced`
+- 电极定位文件
 
 建议先确保 EEGLAB 可以在 MATLAB 中正常启动。
 
@@ -61,8 +60,8 @@ cd EEGPreProcessScript
 ### 2. 打开 MATLAB 并加入路径
 
 ```matlab
-cd('F:\CJZProjectFile\EEGPreProcessScript');
-addpath(genpath('F:\CJZProjectFile\EEGPreProcessScript'));
+cd('项目所在位置');
+addpath(genpath('项目所在位置'));
 ```
 
 如果你希望以后自动识别该目录，也可以在确认路径正确后执行：
@@ -140,11 +139,11 @@ GUI 会保留“所选目录以下”的结构，并以“所选目录名”作�
 例如：
 
 - 选择的源目录：
-  `F:\CJZFile\EEG_M1\Patient_tACS_M1_EEG\基线\sub05殷文海`
+  `F:\CJZFile\EEG_M1\Patient_tACS_M1_EEG\基线\sub05XXX`
 - 选择的输出根目录：
   `F:\CJZFile\EEG_scriptProcess_GUI`
 - 输出结果：
-  `F:\CJZFile\EEG_scriptProcess_GUI\sub05殷文海\...`
+  `F:\CJZFile\EEG_scriptProcess_GUI\sub05XXX\...`
 
 如果你选择的是整个患者目录：
 

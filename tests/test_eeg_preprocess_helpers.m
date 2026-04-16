@@ -145,6 +145,44 @@ sourceRoot = default_smoke_test_source_root();
 verifyEqual(testCase, sourceRoot, "F:\CJZFile\EEG_M1\Patient_tACS_M1_EEG");
 end
 
+function testValidateLookupFilePathRejectsEmptyPath(testCase)
+verifyError(testCase, ...
+    @() validate_lookup_file_path(""), ...
+    'EEGPreprocess:MissingLookupFile');
+end
+
+function testValidateLookupFilePathRejectsMissingFile(testCase)
+verifyError(testCase, ...
+    @() validate_lookup_file_path("F:\missing_lookup_file.ced"), ...
+    'EEGPreprocess:LookupFileNotFound');
+end
+
+function testValidateLookupFilePathRejectsWrongExtension(testCase)
+tmpDir = tempname;
+mkdir(tmpDir);
+cleanup = onCleanup(@() rmdir(tmpDir, 's')); %#ok<NASGU>
+
+wrongPath = fullfile(tmpDir, 'lookup.txt');
+fclose(fopen(wrongPath, 'w'));
+
+verifyError(testCase, ...
+    @() validate_lookup_file_path(string(wrongPath)), ...
+    'EEGPreprocess:InvalidLookupFile');
+end
+
+function testValidateLookupFilePathAcceptsCedFile(testCase)
+tmpDir = tempname;
+mkdir(tmpDir);
+cleanup = onCleanup(@() rmdir(tmpDir, 's')); %#ok<NASGU>
+
+lookupPath = fullfile(tmpDir, 'lookup.ced');
+fclose(fopen(lookupPath, 'w'));
+
+validatedPath = validate_lookup_file_path(string(lookupPath));
+
+verifyEqual(testCase, validatedPath, string(lookupPath));
+end
+
 function testSummarizeSmokeTestResultsCountsStatusesAndOutputs(testCase)
 results = repmat(struct( ...
     'input_file', "", ...

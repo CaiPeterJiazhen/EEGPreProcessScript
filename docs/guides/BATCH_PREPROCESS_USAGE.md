@@ -8,6 +8,7 @@
 - `load_preprocess_config.m`: config loader
 - `save_preprocess_config.m`: config saver
 - `src\run_preprocess_from_gui.m`: GUI-to-batch bridge
+- `src\validate_lookup_file_path.m`: lookup-file validator
 - `config\preprocess_config.json`: saved editable parameters
 
 ## Fixed preprocessing steps
@@ -15,7 +16,7 @@
 The script always performs these first six EEGLAB preprocessing steps:
 
 1. Load `.cnt`
-2. Apply channel lookup with `F:\CJZFile\EEG_M1\standard_1005.ced`
+2. Apply channel lookup with a selected `.ced` file
 3. Remove `HEO`, `VEO`, `EKG`, `EMG`
 4. Resample
 5. High-pass, low-pass, and fixed `49-51 Hz` notch filtering
@@ -37,10 +38,15 @@ You can edit and save these parameters:
 - `overwrite_existing`
 - `save_log`
 - `eeglab_path`
+- `lookup_file`
 
 The default saved config file is now:
 
 - `F:\CJZProjectFile\EEGPreProcessScript\config\preprocess_config.json`
+
+The default lookup file remains:
+
+- `F:\CJZFile\EEG_M1\standard_1005.ced`
 
 ## GUI quick start
 
@@ -61,10 +67,21 @@ launch_preprocess_gui
 
 1. Click `Select Source` and choose any directory.
 2. Click `Select Output` and choose the output root.
-3. Check the `CNT files` count preview.
-4. Adjust sample rate / high-pass / low-pass if needed.
-5. Click `Smoke Test` to process only one file first.
-6. If the smoke test looks correct, click `Start Processing`.
+3. In `Lookup File`, either type a `.ced` path or click `Select File`.
+4. Check the `CNT files` count preview.
+5. Adjust sample rate / high-pass / low-pass if needed.
+6. Click `Smoke Test` to process only one file first.
+7. If the smoke test looks correct, click `Start Processing`.
+
+## Lookup-file validation
+
+Before `Smoke Test` or `Start Processing`, the GUI validates the lookup file:
+
+- it cannot be empty
+- it must exist
+- it must use the `.ced` extension
+
+Invalid values are rejected before batch preprocessing starts.
 
 ## GUI path rule
 
@@ -98,12 +115,13 @@ Recommended first validation:
 
 1. Choose a source directory.
 2. Choose an output directory.
-3. Click `Smoke Test`.
-4. Confirm the GUI shows:
+3. Confirm or select a valid `.ced` lookup file.
+4. Click `Smoke Test`.
+5. Confirm the GUI shows:
    - `Processed: 1`
    - `Failed: 0`
-5. Confirm one `.set/.fdt` pair exists under the selected output root.
-6. Open the `.set` in EEGLAB for manual inspection.
+6. Confirm one `.set/.fdt` pair exists under the selected output root.
+7. Open the `.set` in EEGLAB for manual inspection.
 
 ## Command-line usage
 
@@ -186,6 +204,7 @@ After a smoke test or batch run, check:
 
 - the `.set/.fdt` files exist
 - the saved sampling rate matches the configured value
+- the selected `.ced` lookup file is correct
 - `HEO/VEO/EKG/EMG` were removed
 - the `49-51 Hz` notch was applied
 - the `M1/M2` re-reference was applied
@@ -193,4 +212,4 @@ After a smoke test or batch run, check:
 
 ## Runtime limitation in this Codex session
 
-The code was reorganized and statically reviewed here, but MATLAB execution could not be verified in this session because `matlab.exe -batch` failed with a local license error (`License Manager Error -9`). GUI and runtime behavior still need to be tested on your local MATLAB + EEGLAB machine.
+The code was updated and statically reviewed here, but MATLAB execution could not be verified in this session because `matlab.exe -batch` failed with a local license error (`License Manager Error -9`). GUI and runtime behavior still need to be tested on your local MATLAB + EEGLAB machine.

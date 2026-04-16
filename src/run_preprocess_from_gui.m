@@ -30,6 +30,7 @@ if cnt_count == 0
 end
 
 cfg = collect_gui_config(ui);
+cfg.lookup_file = validate_lookup_file_path(cfg.lookup_file);
 cfg.output_root = output_root;
 cfg.limit_files = 0;
 if smoke_test
@@ -37,9 +38,11 @@ if smoke_test
 end
 cfg.log_callback = @(msg) append_gui_log(ui.LogTextArea, msg);
 
+ui.LookupFileField.Value = char(cfg.lookup_file);
 ui.CntCountValueLabel.Text = sprintf('CNT files: %d', cnt_count);
-append_gui_log(ui.LogTextArea, sprintf('Source root: %s', source_root));
-append_gui_log(ui.LogTextArea, sprintf('Output root: %s', output_root));
+append_gui_log(ui.LogTextArea, sprintf('Source root: %s', char(source_root)));
+append_gui_log(ui.LogTextArea, sprintf('Output root: %s', char(output_root)));
+append_gui_log(ui.LogTextArea, sprintf('Lookup file: %s', char(cfg.lookup_file)));
 if smoke_test
     append_gui_log(ui.LogTextArea, 'Running smoke test (limit_files = 1).');
 else

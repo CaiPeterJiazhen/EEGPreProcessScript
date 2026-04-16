@@ -5,16 +5,16 @@ ensure_src_on_path();
 cfg = load_preprocess_config();
 ui = struct();
 
-fig = uifigure('Name', 'EEG Preprocess GUI', 'Position', [100 100 1040 680]);
+fig = uifigure('Name', 'EEG Preprocess GUI', 'Position', [100 100 1040 720]);
 fig.UserData = struct();
 mainGrid = uigridlayout(fig, [3 1]);
-mainGrid.RowHeight = {130, '1x', 60};
+mainGrid.RowHeight = {165, '1x', 60};
 mainGrid.Padding = [10 10 10 10];
 mainGrid.RowSpacing = 10;
 
 pathPanel = uipanel(mainGrid, 'Title', 'Directories');
-pathGrid = uigridlayout(pathPanel, [3 3]);
-pathGrid.RowHeight = {28, 28, 28};
+pathGrid = uigridlayout(pathPanel, [4 3]);
+pathGrid.RowHeight = {28, 28, 28, 28};
 pathGrid.ColumnWidth = {80, '1x', 120};
 
 sourceLabel = uilabel(pathGrid, 'Text', 'Source', 'HorizontalAlignment', 'right');
@@ -44,12 +44,25 @@ ui.OutputBrowseButton = uibutton(pathGrid, 'push', 'Text', 'Select Output', ...
 ui.OutputBrowseButton.Layout.Row = 2;
 ui.OutputBrowseButton.Layout.Column = 3;
 
+lookupLabel = uilabel(pathGrid, 'Text', 'Lookup File', 'HorizontalAlignment', 'right');
+lookupLabel.Layout.Row = 3;
+lookupLabel.Layout.Column = 1;
+
+ui.LookupFileField = uieditfield(pathGrid, 'text');
+ui.LookupFileField.Layout.Row = 3;
+ui.LookupFileField.Layout.Column = 2;
+
+ui.LookupBrowseButton = uibutton(pathGrid, 'push', 'Text', 'Select File', ...
+    'ButtonPushedFcn', @(~, ~) choose_lookup_file());
+ui.LookupBrowseButton.Layout.Row = 3;
+ui.LookupBrowseButton.Layout.Column = 3;
+
 scanLabel = uilabel(pathGrid, 'Text', 'Scan', 'HorizontalAlignment', 'right');
-scanLabel.Layout.Row = 3;
+scanLabel.Layout.Row = 4;
 scanLabel.Layout.Column = 1;
 
 ui.CntCountValueLabel = uilabel(pathGrid, 'Text', 'CNT files: -');
-ui.CntCountValueLabel.Layout.Row = 3;
+ui.CntCountValueLabel.Layout.Row = 4;
 ui.CntCountValueLabel.Layout.Column = [2 3];
 
 centerGrid = uigridlayout(mainGrid, [1 2]);
@@ -150,6 +163,7 @@ fig.UserData.ui = ui;
 controls_to_disable = {
     ui.SourceDirField, ui.SourceBrowseButton, ...
     ui.OutputDirField, ui.OutputBrowseButton, ...
+    ui.LookupFileField, ui.LookupBrowseButton, ...
     ui.SampleRateField, ui.HighpassField, ui.LowpassField, ...
     ui.OverwriteCheckBox, ui.SaveLogCheckBox, ...
     ui.LoadConfigButton, ui.SaveConfigButton, ...
@@ -175,6 +189,17 @@ controls_to_disable = {
         end
         ui.OutputDirField.Value = selected_dir;
         append_gui_log(ui.LogTextArea, sprintf('Selected output directory: %s', selected_dir));
+    end
+
+    function choose_lookup_file()
+        [selected_file, selected_path] = uigetfile({'*.ced', 'CED files (*.ced)'}, ...
+            'Select lookup file', choose_start_file(ui.LookupFileField.Value));
+        if isequal(selected_file, 0)
+            return;
+        end
+        lookup_path = fullfile(selected_path, selected_file);
+        ui.LookupFileField.Value = lookup_path;
+        append_gui_log(ui.LogTextArea, sprintf('Selected lookup file: %s', lookup_path));
     end
 
     function update_source_count()
@@ -206,7 +231,9 @@ controls_to_disable = {
     function save_config_callback()
         try
             cfg_to_save = collect_gui_config(ui);
+            cfg_to_save.lookup_file = validate_lookup_file_path(cfg_to_save.lookup_file);
             save_preprocess_config(cfg_to_save);
+            ui.LookupFileField.Value = char(cfg_to_save.lookup_file);
             append_gui_log(ui.LogTextArea, 'Saved config to preprocess_config.json');
             ui.StatusValueLabel.Text = 'Config saved';
         catch err
@@ -261,6 +288,15 @@ if isempty(start_dir) || ~isfolder(start_dir)
 end
 end
 
+function start_dir = choose_start_file(current_value)
+current_value = string(strtrim(string(current_value)));
+if strlength(current_value) > 0 && isfile(current_value)
+    start_dir = fileparts(char(current_value));
+else
+    start_dir = choose_start_directory(current_value);
+end
+end
+
 function ensure_src_on_path()
 script_dir = fileparts(mfilename('fullpath'));
 src_dir = fullfile(script_dir, 'src');
@@ -268,5 +304,3 @@ if exist(src_dir, 'dir')
     addpath(src_dir);
 end
 end
-
-

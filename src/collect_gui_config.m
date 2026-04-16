@@ -8,5 +8,6 @@ cfg.lowpass_hz = double(ui.LowpassField.Value);
 cfg.overwrite_existing = logical(ui.OverwriteCheckBox.Value);
 cfg.save_log = logical(ui.SaveLogCheckBox.Value);
 cfg.output_root = string(ui.OutputDirField.Value);
+cfg.lookup_file = string(ui.LookupFileField.Value);
 cfg = normalize_preprocess_config(cfg);
 end

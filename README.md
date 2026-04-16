@@ -1,4 +1,4 @@
-# EEGPreProcessScript
+﻿# EEGPreProcessScript
 
 ## 项目简介
 
@@ -7,7 +7,7 @@
 当前固定自动执行的步骤为：
 
 1. 导入 `.cnt` 文件
-2. 加载电极定位文件 `F:\CJZFile\EEG_M1\standard_1005.ced`
+2. 加载电极定位文件 `.ced`
 3. 删除 `HEO / VEO / EKG / EMG`
 4. 降采样
 5. 高通、低通、固定 `49-51 Hz` 工频陷波
@@ -15,12 +15,19 @@
 
 第 7 步及之后的预处理仍由用户手动完成。
 
+默认电极定位文件路径为：
+
+- `F:\CJZFile\EEG_M1\standard_1005.ced`
+
+GUI 中可以改成任意有效的 `.ced` 文件。
+
 ## 适用场景
 
 - 批量处理患者或健康人 EEG 的 `.cnt` 文件
 - 使用 GUI 选择任意目录并递归处理
 - 保持原始目录层级关系输出 `.set/.fdt`
 - 在正式批处理前先做 1 个文件的烟雾测试
+- 根据不同数据集切换不同的电极定位 `.ced` 文件
 
 ## 项目特点
 
@@ -30,6 +37,7 @@
 - 输出保持“所选目录以下”的层级结构
 - 固定执行 `49-51 Hz` 陷波
 - 固定执行 `M1/M2` 重参考
+- GUI 支持手动输入或选择电极定位 `.ced` 文件
 - 采样率、高通、低通参数可保存、可修改
 
 ## 环境要求
@@ -40,7 +48,7 @@
 - MATLAB
 - EEGLAB
 - EEG 原始数据为 `.cnt` 格式
-- 电极定位文件
+- 至少有一个可用的电极定位 `.ced` 文件
 
 建议先确保 EEGLAB 可以在 MATLAB 中正常启动。
 
@@ -60,8 +68,8 @@ cd EEGPreProcessScript
 ### 2. 打开 MATLAB 并加入路径
 
 ```matlab
-cd('项目所在位置');
-addpath(genpath('项目所在位置'));
+cd('F:\CJZProjectFile\EEGPreProcessScript');
+addpath(genpath('F:\CJZProjectFile\EEGPreProcessScript'));
 ```
 
 如果你希望以后自动识别该目录，也可以在确认路径正确后执行：
@@ -102,10 +110,11 @@ disp(cfg)
 1. 启动 GUI
 2. 选择一个源目录
 3. 选择一个输出目录
-4. 点击 `Smoke Test`
-5. 确认生成一对 `.set/.fdt`
-6. 用 EEGLAB 手动打开结果检查
-7. 再进行完整批处理
+4. 确认或选择电极定位 `.ced` 文件
+5. 点击 `Smoke Test`
+6. 确认生成一对 `.set/.fdt`
+7. 用 EEGLAB 手动打开结果检查
+8. 再进行完整批处理
 
 ## GUI 使用方法
 
@@ -122,15 +131,26 @@ launch_preprocess_gui
    - GUI 会递归扫描其下所有 `.cnt`
 2. 点击 `Select Output`
    - 选择输出根目录
-3. 查看 `CNT files` 数量预览
-4. 按需设置参数：
+3. 在 `Lookup File` 一栏：
+   - 可以直接手动输入 `.ced` 路径
+   - 也可以点击 `Select File` 选择 `.ced` 文件
+4. 查看 `CNT files` 数量预览
+5. 按需设置参数：
    - `Sample Rate`
    - `High-pass`
    - `Low-pass`
    - `Overwrite`
    - `Save Log`
-5. 先点击 `Smoke Test`
-6. 确认没问题后点击 `Start Processing`
+6. 先点击 `Smoke Test`
+7. 确认没问题后点击 `Start Processing`
+
+### GUI 中 Lookup File 的规则
+
+- 默认值仍然是 `F:\CJZFile\EEG_M1\standard_1005.ced`
+- 必须是存在的文件
+- 必须是 `.ced` 扩展名
+- `Smoke Test` 和 `Start Processing` 前会做校验
+- `Load Config` / `Save Config` 会一起加载和保存这个路径
 
 ### GUI 输出规则
 
@@ -139,11 +159,11 @@ GUI 会保留“所选目录以下”的结构，并以“所选目录名”作�
 例如：
 
 - 选择的源目录：
-  `F:\CJZFile\EEG_M1\Patient_tACS_M1_EEG\基线\sub05XXX`
+  `F:\CJZFile\EEG_M1\Patient_tACS_M1_EEG\基线\sub05殷文海`
 - 选择的输出根目录：
   `F:\CJZFile\EEG_scriptProcess_GUI`
 - 输出结果：
-  `F:\CJZFile\EEG_scriptProcess_GUI\sub05XXX\...`
+  `F:\CJZFile\EEG_scriptProcess_GUI\sub05殷文海\...`
 
 如果你选择的是整个患者目录：
 
@@ -216,6 +236,13 @@ results = run_preprocess_batch( ...
 - `overwrite_existing`
 - `save_log`
 - `eeglab_path`
+- `lookup_file`
+
+其中：
+
+- `lookup_file` 默认值为 `F:\CJZFile\EEG_M1\standard_1005.ced`
+- GUI 中可以手动修改或选择
+- 必须是有效的 `.ced` 文件
 
 固定不允许修改的处理规则：
 
@@ -255,7 +282,7 @@ EEGPreProcessScript/
 ├─ src/
 │  ├─ run_preprocess_from_gui.m
 │  ├─ preprocess_cnt_file.m
-│  ├─ normalize_preprocess_config.m
+│  ├─ validate_lookup_file_path.m
 │  └─ ...其他辅助函数
 ├─ docs/
 │  ├─ guides/
@@ -282,6 +309,7 @@ EEGPreProcessScript/
 - `HEO/VEO/EKG/EMG` 是否已删除
 - `49-51 Hz` 陷波是否生效
 - `M1/M2` 重参考是否生效
+- 电极定位文件是否使用了预期的 `.ced`
 - 输出目录层级是否符合所选源目录
 
 ## 常见问题
@@ -299,7 +327,21 @@ EEGPreProcessScript/
 - 或在配置中填写 `eeglab_path`
 - 或手动 `addpath(genpath(EEGLAB目录))`
 
-### 2. 找不到 M1 或 M2
+### 2. 电极定位文件无效
+
+可能原因：
+
+- 路径为空
+- 文件不存在
+- 选择的不是 `.ced`
+
+处理方法：
+
+- 在 GUI 的 `Lookup File` 中重新选择 `.ced`
+- 确认文件真实存在
+- 确认扩展名为 `.ced`
+
+### 3. 找不到 M1 或 M2
 
 可能原因：
 
@@ -309,10 +351,10 @@ EEGPreProcessScript/
 处理方法：
 
 - 检查数据中的通道标签
-- 检查 `standard_1005.ced`
+- 检查使用的 `.ced` 文件
 - 确认 `M1` / `M2` 未被误删
 
-### 3. 输出文件已存在但没有覆盖
+### 4. 输出文件已存在但没有覆盖
 
 原因：
 
@@ -323,7 +365,7 @@ EEGPreProcessScript/
 - 在 GUI 勾选 `Overwrite`
 - 或在配置文件里把 `overwrite_existing` 改为 `true`
 
-### 4. 只处理了少量文件
+### 5. 只处理了少量文件
 
 原因：
 

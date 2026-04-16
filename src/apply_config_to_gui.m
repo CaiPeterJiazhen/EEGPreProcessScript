@@ -8,4 +8,5 @@ ui.LowpassField.Value = cfg.lowpass_hz;
 ui.OverwriteCheckBox.Value = cfg.overwrite_existing;
 ui.SaveLogCheckBox.Value = cfg.save_log;
 ui.OutputDirField.Value = char(cfg.output_root);
+ui.LookupFileField.Value = char(cfg.lookup_file);
 end

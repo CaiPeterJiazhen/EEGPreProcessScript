@@ -1,0 +1,15 @@
+# MATLAB temporary files
+*.asv
+*.autosave
+*.bak
+*.tmp
+*.orig
+
+# OS / editor files
+Thumbs.db
+.DS_Store
+.vscode/
+.idea/
+
+# Local logs or scratch files
+*.log

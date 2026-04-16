@@ -29,26 +29,26 @@ cfg.save_log = logical(cfg.save_log);
 
 if cfg.target_sample_rate <= 0
     error('EEGPreprocess:InvalidSampleRate', ...
-        'target_sample_rate must be greater than 0.');
+        'target_sample_rate 必须大于 0。');
 end
 
 if cfg.highpass_hz <= 0 || cfg.lowpass_hz <= 0
     error('EEGPreprocess:InvalidFilterRange', ...
-        'highpass_hz and lowpass_hz must both be greater than 0.');
+        'highpass_hz 和 lowpass_hz 都必须大于 0。');
 end
 
 if cfg.highpass_hz >= cfg.lowpass_hz
     error('EEGPreprocess:InvalidFilterRange', ...
-        'highpass_hz must be smaller than lowpass_hz.');
+        'highpass_hz 必须小于 lowpass_hz。');
 end
 
 if numel(cfg.notch_band_hz) ~= 2
     error('EEGPreprocess:InvalidNotchBand', ...
-        'notch_band_hz must contain exactly two values.');
+        'notch_band_hz 必须恰好包含两个数值。');
 end
 
 if numel(cfg.reference_labels) ~= 2
     error('EEGPreprocess:InvalidReferenceLabels', ...
-        'reference_labels must contain exactly two labels.');
+        'reference_labels 必须恰好包含两个标签。');
 end
 end

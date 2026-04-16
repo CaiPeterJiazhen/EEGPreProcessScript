@@ -14,7 +14,7 @@ result.fdt_path = paths.fdt_path;
 
 if isfile(paths.set_path) && ~cfg.overwrite_existing
     result.status = "skipped_existing";
-    result.message = "Output already exists and overwrite_existing is false.";
+    result.message = "输出已存在，且 overwrite_existing 为 false。";
     return;
 end
 

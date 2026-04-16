@@ -1,4 +1,4 @@
-﻿function [results, run_info] = run_preprocess_batch(source_root, varargin)
+function [results, run_info] = run_preprocess_batch(source_root, varargin)
 %RUN_PREPROCESS_BATCH Batch preprocess all CNT files under one source root.
 %
 % Example:
@@ -27,7 +27,7 @@ ensure_eeglab_available(cfg);
 files = collect_cnt_files(source_root);
 if isempty(files)
     error('EEGPreprocess:NoCntFiles', ...
-        'No CNT files were found under: %s', char(source_root));
+        '在该目录下未找到 CNT 文件: %s', char(source_root));
 end
 
 if cfg.limit_files > 0
@@ -35,10 +35,10 @@ if cfg.limit_files > 0
 end
 
 results = repmat(empty_result(), numel(files), 1);
-emit_log(log_callback, sprintf('Found %d CNT file(s) under %s', numel(files), char(source_root)));
+emit_log(log_callback, sprintf('在 %s 下找到 %d 个 CNT 文件。', char(source_root), numel(files)));
 
 for idx = 1:numel(files)
-    emit_log(log_callback, sprintf('[%d/%d] Processing %s', idx, numel(files), char(files(idx))));
+    emit_log(log_callback, sprintf('[%d/%d] 正在处理 %s', idx, numel(files), char(files(idx))));
     started_at = tic;
 
     try
@@ -59,12 +59,12 @@ run_info = summarize_results(results, source_root, cfg.output_root);
 
 if cfg.save_log
     run_info.log_path = write_batch_log(results, source_root, cfg.output_root);
-    emit_log(log_callback, sprintf('Batch log saved to %s', char(run_info.log_path)));
+    emit_log(log_callback, sprintf('批处理日志已保存到 %s', char(run_info.log_path)));
 else
     run_info.log_path = "";
 end
 
-emit_log(log_callback, sprintf('Processed: %d | Skipped existing: %d | Failed: %d', ...
+emit_log(log_callback, sprintf('已处理: %d | 已跳过: %d | 失败: %d', ...
     run_info.processed_count, run_info.skipped_existing_count, run_info.failed_count));
 end
 
@@ -83,7 +83,7 @@ end
 
 if rem(numel(varargin), 2) ~= 0
     error('EEGPreprocess:InvalidArguments', ...
-        'Optional arguments must be provided as name/value pairs.');
+        '可选参数必须以名称/值成对提供。');
 end
 
 for idx = 1:2:numel(varargin)
@@ -128,13 +128,13 @@ end
 
 if ~isa(log_callback, 'function_handle')
     error('EEGPreprocess:InvalidLogCallback', ...
-        'log_callback must be a function handle.');
+        'log_callback 必须是函数句柄。');
 end
 
 try
     log_callback(message);
 catch err
-    fprintf('Log callback failed: %s\n', err.message);
+    fprintf('日志回调执行失败: %s\n', err.message);
 end
 end
 
@@ -144,16 +144,16 @@ input_file = string(current_result.input_file);
 
 switch status
     case "processed"
-        emit_log(log_callback, sprintf('[%d/%d] Processed %s', idx, total_count, char(input_file)));
+        emit_log(log_callback, sprintf('[%d/%d] 已处理 %s', idx, total_count, char(input_file)));
     case "skipped_existing"
-        emit_log(log_callback, sprintf('[%d/%d] Skipped existing output for %s', idx, total_count, char(input_file)));
+        emit_log(log_callback, sprintf('[%d/%d] 已跳过已有输出 %s', idx, total_count, char(input_file)));
     case "failed"
-        emit_log(log_callback, sprintf('[%d/%d] Failed %s', idx, total_count, char(input_file)));
+        emit_log(log_callback, sprintf('[%d/%d] 处理失败 %s', idx, total_count, char(input_file)));
         if strlength(string(current_result.message)) > 0
             emit_log(log_callback, string(current_result.message));
         end
     otherwise
-        emit_log(log_callback, sprintf('[%d/%d] Status %s for %s', idx, total_count, char(status), char(input_file)));
+        emit_log(log_callback, sprintf('[%d/%d] 状态 %s, 文件 %s', idx, total_count, char(status), char(input_file)));
 end
 end
 

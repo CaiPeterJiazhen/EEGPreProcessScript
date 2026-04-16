@@ -1,4 +1,4 @@
-﻿function report = run_preprocess_from_gui(ui, smoke_test)
+function report = run_preprocess_from_gui(ui, smoke_test)
 %RUN_PREPROCESS_FROM_GUI Validate GUI inputs and run batch preprocessing.
 
 if nargin < 2
@@ -9,15 +9,15 @@ source_root = string(strtrim(string(ui.SourceDirField.Value)));
 output_root = string(strtrim(string(ui.OutputDirField.Value)));
 
 if strlength(source_root) == 0
-    error('EEGPreprocess:MissingSourceDir', 'Please select a source directory.');
+    error('EEGPreprocess:MissingSourceDir', '请选择源目录。');
 end
 
 if strlength(output_root) == 0
-    error('EEGPreprocess:MissingOutputDir', 'Please select an output directory.');
+    error('EEGPreprocess:MissingOutputDir', '请选择输出目录。');
 end
 
 if ~isfolder(source_root)
-    error('EEGPreprocess:InvalidSourceDir', 'Source directory does not exist: %s', char(source_root));
+    error('EEGPreprocess:InvalidSourceDir', '源目录不存在: %s', char(source_root));
 end
 
 if ~isfolder(output_root)
@@ -26,7 +26,7 @@ end
 
 cnt_count = count_cnt_files(source_root);
 if cnt_count == 0
-    error('EEGPreprocess:NoCntFiles', 'No CNT files were found under: %s', char(source_root));
+    error('EEGPreprocess:NoCntFiles', '在该目录下未找到 CNT 文件: %s', char(source_root));
 end
 
 cfg = collect_gui_config(ui);
@@ -39,14 +39,14 @@ end
 cfg.log_callback = @(msg) append_gui_log(ui.LogTextArea, msg);
 
 ui.LookupFileField.Value = char(cfg.lookup_file);
-ui.CntCountValueLabel.Text = sprintf('CNT files: %d', cnt_count);
-append_gui_log(ui.LogTextArea, sprintf('Source root: %s', char(source_root)));
-append_gui_log(ui.LogTextArea, sprintf('Output root: %s', char(output_root)));
-append_gui_log(ui.LogTextArea, sprintf('Lookup file: %s', char(cfg.lookup_file)));
+ui.CntCountValueField.Value = sprintf('CNT 文件数 %d', cnt_count);
+append_gui_log(ui.LogTextArea, sprintf('源目录: %s', char(source_root)));
+append_gui_log(ui.LogTextArea, sprintf('输出目录: %s', char(output_root)));
+append_gui_log(ui.LogTextArea, sprintf('电极定位文件: %s', char(cfg.lookup_file)));
 if smoke_test
-    append_gui_log(ui.LogTextArea, 'Running smoke test (limit_files = 1).');
+    append_gui_log(ui.LogTextArea, '正在运行烟雾测试 (limit_files = 1)。');
 else
-    append_gui_log(ui.LogTextArea, 'Running full batch processing.');
+    append_gui_log(ui.LogTextArea, '正在运行完整批处理。');
 end
 
 [results, run_info] = run_preprocess_batch(source_root, cfg);
@@ -63,14 +63,14 @@ summary = summarize_smoke_test_results(results, output_exists, source_root);
 summary.log_path = run_info.log_path;
 
 if summary.failed_count > 0
-    ui.StatusValueLabel.Text = 'Completed with failures';
+    ui.StatusValueLabel.Text = '处理完成，但存在失败';
 elseif smoke_test
-    ui.StatusValueLabel.Text = 'Smoke test completed';
+    ui.StatusValueLabel.Text = '烟雾测试完成';
 else
-    ui.StatusValueLabel.Text = 'Completed';
+    ui.StatusValueLabel.Text = '处理完成';
 end
 
-ui.StatsValueLabel.Text = sprintf('Processed: %d | Skipped: %d | Failed: %d', ...
+ui.StatsValueLabel.Text = sprintf('已处理: %d | 已跳过: %d | 失败: %d', ...
     summary.processed_count, summary.skipped_existing_count, summary.failed_count);
 ui.LastLogField.Value = char(run_info.log_path);
 

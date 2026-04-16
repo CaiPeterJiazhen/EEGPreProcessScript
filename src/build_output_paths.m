@@ -8,7 +8,7 @@ output_root = strip_trailing_separator(string(output_root));
 prefix = source_root + filesep;
 if ~(strcmpi(input_file, source_root) || startsWith(input_file, prefix, 'IgnoreCase', true))
     error('EEGPreprocess:InputOutsideSourceRoot', ...
-        'Input file is not under the source root: %s', input_file);
+        '输入文件不在源目录之下: %s', input_file);
 end
 
 [~, source_name] = fileparts(char(source_root));

@@ -5,7 +5,7 @@ source_root = string(source_root);
 
 if ~isfolder(source_root)
     error('EEGPreprocess:InvalidSourceRoot', ...
-        'Source root does not exist: %s', char(source_root));
+        '源目录不存在: %s', char(source_root));
 end
 
 listing = dir(fullfile(char(source_root), '**', '*.cnt'));

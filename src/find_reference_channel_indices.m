@@ -16,7 +16,7 @@ for idx = 1:numel(reference_labels)
     match_index = find(strcmpi(labels, reference_labels(idx)), 1, 'first');
     if isempty(match_index)
         error('EEGPreprocess:MissingReferenceChannel', ...
-            'Reference channel %s was not found.', reference_labels(idx));
+            '未找到参考电极通道 %s。', reference_labels(idx));
     end
     indices(idx) = match_index;
 end

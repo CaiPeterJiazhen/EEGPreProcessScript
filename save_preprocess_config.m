@@ -1,4 +1,4 @@
-﻿function save_preprocess_config(cfg, config_path)
+function save_preprocess_config(cfg, config_path)
 %SAVE_PREPROCESS_CONFIG Persist config values as JSON.
 
 ensure_src_on_path();
@@ -23,6 +23,7 @@ serializable.highpass_hz = cfg.highpass_hz;
 serializable.lowpass_hz = cfg.lowpass_hz;
 serializable.notch_band_hz = cfg.notch_band_hz;
 serializable.remove_channels = cellstr(cfg.remove_channels);
+serializable.reference_mode = char(cfg.reference_mode);
 serializable.reference_labels = cellstr(cfg.reference_labels);
 serializable.overwrite_existing = cfg.overwrite_existing;
 serializable.limit_files = cfg.limit_files;

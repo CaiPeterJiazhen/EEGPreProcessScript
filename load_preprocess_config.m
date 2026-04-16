@@ -1,4 +1,4 @@
-﻿function cfg = load_preprocess_config(config_path)
+function cfg = load_preprocess_config(config_path)
 %LOAD_PREPROCESS_CONFIG Load config JSON or create it from defaults.
 
 ensure_src_on_path();
@@ -16,6 +16,7 @@ if ~isfile(config_path)
 end
 
 raw_text = fileread(char(config_path));
+raw_text = strip_utf8_bom(raw_text);
 if strlength(strtrim(string(raw_text))) == 0
     save_preprocess_config(defaults, config_path);
     cfg = defaults;
@@ -32,6 +33,12 @@ for idx = 1:numel(loaded_fields)
 end
 
 cfg = normalize_preprocess_config(cfg);
+end
+
+function text = strip_utf8_bom(text)
+if ~isempty(text) && text(1) == char(65279)
+    text = text(2:end);
+end
 end
 
 function config_path = default_config_path()

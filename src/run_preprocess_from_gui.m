@@ -38,11 +38,18 @@ if smoke_test
 end
 cfg.log_callback = @(msg) append_gui_log(ui.LogTextArea, msg);
 
+if cfg.reference_mode == "average"
+    reference_mode_text = "平均参考";
+else
+    reference_mode_text = "M1/M2 重参考";
+end
+
 ui.LookupFileField.Value = char(cfg.lookup_file);
 ui.CntCountValueField.Value = sprintf('CNT 文件数 %d', cnt_count);
 append_gui_log(ui.LogTextArea, sprintf('源目录: %s', char(source_root)));
 append_gui_log(ui.LogTextArea, sprintf('输出目录: %s', char(output_root)));
 append_gui_log(ui.LogTextArea, sprintf('电极定位文件: %s', char(cfg.lookup_file)));
+append_gui_log(ui.LogTextArea, sprintf('重参考方式: %s', char(reference_mode_text)));
 if smoke_test
     append_gui_log(ui.LogTextArea, '正在运行烟雾测试 (limit_files = 1)。');
 else

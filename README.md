@@ -1,17 +1,21 @@
-﻿# EEGPreProcessScript
+# EEGPreProcessScript
 
 ## 项目简介
 
 这是一个基于 `MATLAB + EEGLAB` 的 EEG 预处理辅助项目，用于自动完成预处理流程的前六步，并将结果保存为 `.set/.fdt` 文件，方便后续在 EEGLAB 中继续手动处理。
 
-当前固定自动执行的步骤为：
+当前自动执行的前六步为：
 
 1. 导入 `.cnt` 文件
 2. 加载电极定位文件 `.ced`
-3. 删除 `HEO / VEO / EKG / EMG`
+3. 按重参考模式删除通道：
+   - 基础固定删除 `HEO / VEO / EKG / EMG`
+   - 选择 `平均参考` 时额外删除 `M1 / M2`
 4. 降采样
 5. 高通、低通、固定 `49-51 Hz` 工频陷波
-6. 固定使用 `M1 / M2` 重参考
+6. 根据配置执行重参考：
+   - 默认 `平均参考`
+   - 可切换为 `M1 / M2` 重参考
 
 第 7 步及之后的预处理仍由用户手动完成。
 
@@ -36,8 +40,9 @@ GUI 中可以改成任意有效的 `.ced` 文件。
 - 支持任意目录递归扫描 `.cnt`
 - 输出保持“所选目录以下”的层级结构
 - 固定执行 `49-51 Hz` 陷波
-- 固定执行 `M1/M2` 重参考
+- 支持 `平均参考` 和 `M1/M2` 重参考切换，默认 `平均参考`
 - GUI 支持手动输入或选择电极定位 `.ced` 文件
+- GUI 支持选择重参考方式
 - 采样率、高通、低通参数可保存、可修改
 
 ## 环境要求
@@ -111,10 +116,11 @@ disp(cfg)
 2. 选择一个源目录
 3. 选择一个输出目录
 4. 确认或选择电极定位 `.ced` 文件
-5. 点击 `Smoke Test`
-6. 确认生成一对 `.set/.fdt`
-7. 用 EEGLAB 手动打开结果检查
-8. 再进行完整批处理
+5. 选择重参考方式，默认 `平均参考`
+6. 点击 `烟雾测试`
+7. 确认生成一对 `.set/.fdt`
+8. 用 EEGLAB 手动打开结果检查
+9. 再进行完整批处理
 
 ## GUI 使用方法
 
@@ -126,31 +132,41 @@ launch_preprocess_gui
 
 ### GUI 操作步骤
 
-1. 点击 `Select Source`
+1. 点击 `选择源目录`
    - 选择任意一个源目录
    - GUI 会递归扫描其下所有 `.cnt`
-2. 点击 `Select Output`
+2. 点击 `选择输出目录`
    - 选择输出根目录
-3. 在 `Lookup File` 一栏：
+3. 在 `电极定位文件` 一栏：
    - 可以直接手动输入 `.ced` 路径
-   - 也可以点击 `Select File` 选择 `.ced` 文件
-4. 查看 `CNT files` 数量预览
-5. 按需设置参数：
-   - `Sample Rate`
-   - `High-pass`
-   - `Low-pass`
-   - `Overwrite`
-   - `Save Log`
-6. 先点击 `Smoke Test`
-7. 确认没问题后点击 `Start Processing`
+   - 也可以点击 `选择文件` 选择 `.ced` 文件
+4. 查看 `扫描结果` 中的 `CNT 文件数`
+5. 在 `重参考方式` 中选择：
+   - `平均参考`
+   - `M1/M2 重参考`
+6. 按需设置参数：
+   - `采样率`
+   - `高通 (Hz)`
+   - `低通 (Hz)`
+   - `覆盖已有结果`
+   - `保存日志`
+7. 先点击 `烟雾测试`
+8. 确认没问题后点击 `开始处理`
 
-### GUI 中 Lookup File 的规则
+### GUI 中电极定位文件的规则
 
 - 默认值仍然是 `F:\CJZFile\EEG_M1\standard_1005.ced`
 - 必须是存在的文件
 - 必须是 `.ced` 扩展名
-- `Smoke Test` 和 `Start Processing` 前会做校验
-- `Load Config` / `Save Config` 会一起加载和保存这个路径
+- `烟雾测试` 和 `开始处理` 前会做校验
+- `加载配置` / `保存配置` 会一起加载和保存这个路径
+
+### GUI 中重参考方式的规则
+
+- 默认值是 `平均参考`
+- `平均参考` 会在重参考前额外删除 `M1 / M2`
+- `M1/M2 重参考` 会保留 `M1 / M2` 作为参考电极
+- 如果选择 `M1/M2 重参考`，原始数据中必须能找到 `M1` 和 `M2`
 
 ### GUI 输出规则
 
@@ -188,6 +204,7 @@ cfg = load_preprocess_config();
 cfg.target_sample_rate = 250;
 cfg.highpass_hz = 0.5;
 cfg.lowpass_hz = 45;
+cfg.reference_mode = "average";   % 也可以改为 "m1_m2"
 save_preprocess_config(cfg);
 ```
 
@@ -237,18 +254,22 @@ results = run_preprocess_batch( ...
 - `save_log`
 - `eeglab_path`
 - `lookup_file`
+- `reference_mode`
 
 其中：
 
 - `lookup_file` 默认值为 `F:\CJZFile\EEG_M1\standard_1005.ced`
 - GUI 中可以手动修改或选择
 - 必须是有效的 `.ced` 文件
+- `reference_mode` 默认值为 `average`
+- `reference_mode = average` 时，会在重参考前额外删除 `M1 / M2`
+- `reference_mode = m1_m2` 时，会保留 `M1 / M2` 并以其作为参考
 
-固定不允许修改的处理规则：
+始终执行或按模式执行的处理规则：
 
 - `49-51 Hz` 陷波始终执行
-- `M1/M2` 重参考始终执行
 - `HEO/VEO/EKG/EMG` 始终删除
+- 重参考方式可选，默认 `平均参考`
 
 ## 输出结果说明
 
@@ -337,11 +358,11 @@ EEGPreProcessScript/
 
 处理方法：
 
-- 在 GUI 的 `Lookup File` 中重新选择 `.ced`
+- 在 GUI 的 `电极定位文件` 中重新选择 `.ced`
 - 确认文件真实存在
 - 确认扩展名为 `.ced`
 
-### 3. 找不到 M1 或 M2
+### 3. 在 `M1/M2` 重参考模式下找不到 M1 或 M2
 
 可能原因：
 
@@ -382,7 +403,7 @@ EEGPreProcessScript/
 - 本仓库不包含 EEG 原始数据
 - 本仓库默认使用项目外部的 EEG 数据目录
 - 使用前请先确认本机路径配置与实际数据路径一致
-- 第一次运行务必先做 `Smoke Test`
+- 第一次运行务必先做 `烟雾测试`
 - 建议每次参数修改后先抽查 1 个结果文件
 
 ## 相关文档

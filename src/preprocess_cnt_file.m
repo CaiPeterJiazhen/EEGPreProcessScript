@@ -27,7 +27,9 @@ EEG = eeg_checkset(EEG);
 EEG = pop_chanedit(EEG, 'lookup', char(cfg.lookup_file));
 EEG = eeg_checkset(EEG);
 
-remove_labels = existing_labels(EEG, cfg.remove_channels);
+remove_requests = get_remove_channels_for_reference_mode( ...
+    cfg.remove_channels, cfg.reference_mode, cfg.reference_labels);
+remove_labels = existing_labels(EEG, remove_requests);
 if ~isempty(remove_labels)
     EEG = pop_select(EEG, 'nochannel', cellstr(remove_labels));
     EEG = eeg_checkset(EEG);
@@ -55,8 +57,9 @@ EEG = pop_eegfiltnew(EEG, ...
     'plotfreqz', 0);
 EEG = eeg_checkset(EEG);
 
-reference_indices = find_reference_channel_indices(EEG.chanlocs, cfg.reference_labels);
-EEG = pop_reref(EEG, reference_indices);
+reference_targets = resolve_reference_targets( ...
+    EEG.chanlocs, cfg.reference_mode, cfg.reference_labels);
+EEG = pop_reref(EEG, reference_targets);
 EEG = eeg_checkset(EEG);
 
 [~, set_name, ~] = fileparts(char(paths.set_path));

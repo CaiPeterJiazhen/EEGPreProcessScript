@@ -14,6 +14,7 @@ end
 cfg.output_root = string(cfg.output_root);
 cfg.lookup_file = string(cfg.lookup_file);
 cfg.eeglab_path = string(cfg.eeglab_path);
+cfg.reference_mode = string(cfg.reference_mode);
 
 cfg.target_sample_rate = double(cfg.target_sample_rate);
 cfg.highpass_hz = double(cfg.highpass_hz);
@@ -47,7 +48,12 @@ if numel(cfg.notch_band_hz) ~= 2
         'notch_band_hz 必须恰好包含两个数值。');
 end
 
-if numel(cfg.reference_labels) ~= 2
+if ~any(strcmp(cfg.reference_mode, ["average" "m1_m2"]))
+    error('EEGPreprocess:InvalidReferenceMode', ...
+        'reference_mode 必须是 average 或 m1_m2。');
+end
+
+if cfg.reference_mode == "m1_m2" && numel(cfg.reference_labels) ~= 2
     error('EEGPreprocess:InvalidReferenceLabels', ...
         'reference_labels 必须恰好包含两个标签。');
 end

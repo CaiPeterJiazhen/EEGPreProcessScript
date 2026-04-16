@@ -71,8 +71,8 @@ centerGrid.ColumnWidth = {280, '1x'};
 centerGrid.ColumnSpacing = 10;
 
 paramPanel = uipanel(centerGrid, 'Title', '参数设置');
-paramGrid = uigridlayout(paramPanel, [7 2]);
-paramGrid.RowHeight = {28, 28, 28, 28, 28, '1x', '1x'};
+paramGrid = uigridlayout(paramPanel, [8 2]);
+paramGrid.RowHeight = {28, 28, 28, 28, 28, 28, '1x', '1x'};
 paramGrid.ColumnWidth = {120, '1x'};
 
 sampleLabel = uilabel(paramGrid, 'Text', '采样率', 'HorizontalAlignment', 'right');
@@ -96,18 +96,27 @@ ui.LowpassField = uieditfield(paramGrid, 'numeric');
 ui.LowpassField.Layout.Row = 3;
 ui.LowpassField.Layout.Column = 2;
 
+referenceModeLabel = uilabel(paramGrid, 'Text', '重参考方式', 'HorizontalAlignment', 'right');
+referenceModeLabel.Layout.Row = 4;
+referenceModeLabel.Layout.Column = 1;
+ui.ReferenceModeDropDown = uidropdown(paramGrid, ...
+    'Items', {'平均参考', 'M1/M2 重参考'}, ...
+    'ItemsData', {'average', 'm1_m2'});
+ui.ReferenceModeDropDown.Layout.Row = 4;
+ui.ReferenceModeDropDown.Layout.Column = 2;
+
 overwriteLabel = uilabel(paramGrid, 'Text', '覆盖已有结果', 'HorizontalAlignment', 'right');
-overwriteLabel.Layout.Row = 4;
+overwriteLabel.Layout.Row = 5;
 overwriteLabel.Layout.Column = 1;
 ui.OverwriteCheckBox = uicheckbox(paramGrid, 'Text', '允许覆盖已有输出');
-ui.OverwriteCheckBox.Layout.Row = 4;
+ui.OverwriteCheckBox.Layout.Row = 5;
 ui.OverwriteCheckBox.Layout.Column = 2;
 
 saveLogLabel = uilabel(paramGrid, 'Text', '保存日志', 'HorizontalAlignment', 'right');
-saveLogLabel.Layout.Row = 5;
+saveLogLabel.Layout.Row = 6;
 saveLogLabel.Layout.Column = 1;
 ui.SaveLogCheckBox = uicheckbox(paramGrid, 'Text', '保存 CSV 日志');
-ui.SaveLogCheckBox.Layout.Row = 5;
+ui.SaveLogCheckBox.Layout.Row = 6;
 ui.SaveLogCheckBox.Layout.Column = 2;
 
 statusPanel = uipanel(centerGrid, 'Title', '状态与日志');
@@ -166,6 +175,7 @@ controls_to_disable = {
     ui.OutputDirField, ui.OutputBrowseButton, ...
     ui.LookupFileField, ui.LookupBrowseButton, ...
     ui.SampleRateField, ui.HighpassField, ui.LowpassField, ...
+    ui.ReferenceModeDropDown, ...
     ui.OverwriteCheckBox, ui.SaveLogCheckBox, ...
     ui.LoadConfigButton, ui.SaveConfigButton, ...
     ui.RunButton, ui.SmokeButton

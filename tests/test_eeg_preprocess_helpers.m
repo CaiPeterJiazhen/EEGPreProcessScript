@@ -1,4 +1,4 @@
-﻿function tests = test_eeg_preprocess_helpers
+function tests = test_eeg_preprocess_helpers
 project_root = fileparts(fileparts(mfilename('fullpath')));
 src_dir = fullfile(project_root, 'src');
 if exist(src_dir, 'dir')
@@ -17,6 +17,7 @@ verifyEqual(testCase, cfg.highpass_hz, 0.5);
 verifyEqual(testCase, cfg.lowpass_hz, 45);
 verifyEqual(testCase, cfg.notch_band_hz, [49 51]);
 verifyEqual(testCase, cfg.remove_channels, ["HEO" "VEO" "EKG" "EMG"]);
+verifyEqual(testCase, cfg.reference_mode, "average");
 verifyEqual(testCase, cfg.reference_labels, ["M1" "M2"]);
 end
 
@@ -43,6 +44,7 @@ cfg = default_preprocess_config();
 cfg.target_sample_rate = 200;
 cfg.highpass_hz = 1.0;
 cfg.lowpass_hz = 40;
+cfg.reference_mode = "m1_m2";
 
 save_preprocess_config(cfg, cfgPath);
 loaded = load_preprocess_config(cfgPath);
@@ -51,7 +53,31 @@ verifyEqual(testCase, loaded.target_sample_rate, 200);
 verifyEqual(testCase, loaded.highpass_hz, 1.0);
 verifyEqual(testCase, loaded.lowpass_hz, 40);
 verifyEqual(testCase, loaded.notch_band_hz, [49 51]);
+verifyEqual(testCase, loaded.reference_mode, "m1_m2");
 verifyEqual(testCase, loaded.reference_labels, ["M1" "M2"]);
+end
+
+function testLoadConfigAcceptsUtf8BomJson(testCase)
+tmpDir = tempname;
+mkdir(tmpDir);
+cleanup = onCleanup(@() rmdir(tmpDir, 's')); %#ok<NASGU>
+
+cfgPath = fullfile(tmpDir, 'preprocess_config.json');
+jsonText = jsonencode(struct( ...
+    'target_sample_rate', 128, ...
+    'reference_mode', 'average'));
+bytes = uint8([239 187 191 uint8(jsonText)]);
+fid = fopen(cfgPath, 'w');
+if fid == -1
+    error('Test:FileOpenFailed', 'Unable to open temp config file.');
+end
+cleanupFile = onCleanup(@() fclose(fid)); %#ok<NASGU>
+fwrite(fid, bytes, 'uint8');
+
+loaded = load_preprocess_config(cfgPath);
+
+verifyEqual(testCase, loaded.target_sample_rate, 128);
+verifyEqual(testCase, loaded.reference_mode, "average");
 end
 
 function testBuildOutputPathsMirrorsSourceHierarchy(testCase)
@@ -68,13 +94,13 @@ verifyEqual(testCase, paths.fdt_path, string(fullfile(char(expectedDir), 'sqm1.f
 end
 
 function testBuildOutputPathsKeepsOnlySelectedFolderHierarchy(testCase)
-sourceRoot = "F:\source\Patient_tACS_M1_EEG\baseline\sub05殷文海";
-inputFile = "F:\source\Patient_tACS_M1_EEG\baseline\sub05殷文海\session_a\trial01.cnt";
+sourceRoot = "F:\source\Patient_tACS_M1_EEG\baseline\sub05_yinwenhai";
+inputFile = "F:\source\Patient_tACS_M1_EEG\baseline\sub05_yinwenhai\session_a\trial01.cnt";
 outputRoot = "F:\output_gui";
 
 paths = build_output_paths(sourceRoot, inputFile, outputRoot);
 
-expectedDir = string(fullfile(char(outputRoot), 'sub05殷文海', 'session_a'));
+expectedDir = string(fullfile(char(outputRoot), 'sub05_yinwenhai', 'session_a'));
 verifyEqual(testCase, paths.output_dir, expectedDir);
 verifyEqual(testCase, paths.set_path, string(fullfile(char(expectedDir), 'trial01.set')));
 verifyEqual(testCase, paths.fdt_path, string(fullfile(char(expectedDir), 'trial01.fdt')));
@@ -123,6 +149,30 @@ fclose(fopen(fullfile(tmpDir, 'nested', 'ignore.txt'), 'w'));
 count = count_cnt_files(tmpDir);
 
 verifyEqual(testCase, count, 2);
+end
+
+function testResolveEeglabRootUsesConfiguredFolder(testCase)
+resolved = resolve_eeglab_root("F:\eeglab2021.1", "");
+
+verifyEqual(testCase, resolved, "F:\eeglab2021.1");
+end
+
+function testResolveEeglabRootUsesConfiguredFileParent(testCase)
+resolved = resolve_eeglab_root("F:\eeglab2021.1\eeglab.m", "");
+
+verifyEqual(testCase, resolved, "F:\eeglab2021.1");
+end
+
+function testResolveEeglabRootFallsBackToWhichEeglab(testCase)
+resolved = resolve_eeglab_root("", "F:\Matlab2020a\toolbox\eeglab2021.1\eeglab.m");
+
+verifyEqual(testCase, resolved, "F:\Matlab2020a\toolbox\eeglab2021.1");
+end
+
+function testResolveEeglabRootReturnsEmptyWhenUnavailable(testCase)
+resolved = resolve_eeglab_root("", "");
+
+verifyEqual(testCase, resolved, "");
 end
 
 function testFindReferenceChannelIndicesReturnsM1M2Indices(testCase)
@@ -181,6 +231,51 @@ fclose(fopen(lookupPath, 'w'));
 validatedPath = validate_lookup_file_path(string(lookupPath));
 
 verifyEqual(testCase, validatedPath, string(lookupPath));
+end
+
+function testGetRemoveChannelsForAverageReferenceIncludesM1M2(testCase)
+removeLabels = get_remove_channels_for_reference_mode( ...
+    ["HEO" "VEO" "EKG" "EMG"], "average", ["M1" "M2"]);
+
+verifyEqual(testCase, removeLabels, ["HEO" "VEO" "EKG" "EMG" "M1" "M2"]);
+end
+
+function testGetRemoveChannelsForM1M2ReferenceKeepsM1M2(testCase)
+removeLabels = get_remove_channels_for_reference_mode( ...
+    ["HEO" "VEO" "EKG" "EMG"], "m1_m2", ["M1" "M2"]);
+
+verifyEqual(testCase, removeLabels, ["HEO" "VEO" "EKG" "EMG"]);
+end
+
+function testResolveReferenceTargetsReturnsEmptyForAverageReference(testCase)
+targets = resolve_reference_targets(["Fp1" "Cz" "M1" "M2"], "average", ["M1" "M2"]);
+
+verifyEmpty(testCase, targets);
+end
+
+function testResolveReferenceTargetsReturnsM1M2Indices(testCase)
+targets = resolve_reference_targets(["Fp1" "M1" "Cz" "M2"], "m1_m2", ["M1" "M2"]);
+
+verifyEqual(testCase, targets, [2 4]);
+end
+function testNormalizeConfigAllowsAverageReferenceWithoutReferenceLabels(testCase)
+cfg = default_preprocess_config();
+cfg.reference_mode = "average";
+cfg.reference_labels = strings(1, 0);
+
+normalized = normalize_preprocess_config(cfg);
+
+verifyEqual(testCase, normalized.reference_mode, "average");
+verifyEmpty(testCase, normalized.reference_labels);
+end
+
+function testNormalizeConfigRejectsInvalidReferenceMode(testCase)
+cfg = default_preprocess_config();
+cfg.reference_mode = "invalid_mode";
+
+verifyError(testCase, ...
+    @() normalize_preprocess_config(cfg), ...
+    'EEGPreprocess:InvalidReferenceMode');
 end
 
 function testSummarizeSmokeTestResultsCountsStatusesAndOutputs(testCase)

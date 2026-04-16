@@ -1,4 +1,4 @@
-﻿# Batch EEG Preprocess Usage
+# Batch EEG Preprocess Usage
 
 ## Files
 
@@ -17,16 +17,21 @@ The script always performs these first six EEGLAB preprocessing steps:
 
 1. Load `.cnt`
 2. Apply channel lookup with a selected `.ced` file
-3. Remove `HEO`, `VEO`, `EKG`, `EMG`
+3. Remove channels based on the selected reference mode:
+   - always remove `HEO`, `VEO`, `EKG`, `EMG`
+   - additionally remove `M1`, `M2` when `average` reference is selected
 4. Resample
 5. High-pass, low-pass, and fixed `49-51 Hz` notch filtering
-6. Re-reference to `M1/M2`
+6. Re-reference according to `reference_mode`:
+   - default: `average`
+   - optional: `m1_m2`
 
-These fixed steps are not exposed as GUI options:
+The script always enforces these fixed or mode-driven rules:
 
 - `49-51 Hz` notch is always applied
-- `M1/M2` is always used as the reference
 - `HEO/VEO/EKG/EMG` are always removed when present
+- `reference_mode = average` removes `M1/M2` before average rereference
+- `reference_mode = m1_m2` keeps `M1/M2` and rereferences to them
 
 ## Editable parameters
 
@@ -39,6 +44,7 @@ You can edit and save these parameters:
 - `save_log`
 - `eeglab_path`
 - `lookup_file`
+- `reference_mode`
 
 The default saved config file is now:
 
@@ -47,6 +53,10 @@ The default saved config file is now:
 The default lookup file remains:
 
 - `F:\CJZFile\EEG_M1\standard_1005.ced`
+
+The default reference mode is:
+
+- `average`
 
 ## GUI quick start
 
@@ -65,17 +75,18 @@ launch_preprocess_gui
 
 ## GUI workflow
 
-1. Click `Select Source` and choose any directory.
-2. Click `Select Output` and choose the output root.
-3. In `Lookup File`, either type a `.ced` path or click `Select File`.
-4. Check the `CNT files` count preview.
-5. Adjust sample rate / high-pass / low-pass if needed.
-6. Click `Smoke Test` to process only one file first.
-7. If the smoke test looks correct, click `Start Processing`.
+1. Click `选择源目录` and choose any directory.
+2. Click `选择输出目录` and choose the output root.
+3. In `电极定位文件`, either type a `.ced` path or click `选择文件`.
+4. Check the `扫描结果` / `CNT 文件数` preview.
+5. Choose `重参考方式` as `平均参考` or `M1/M2 重参考`.
+6. Adjust sample rate / high-pass / low-pass if needed.
+7. Click `烟雾测试` to process only one file first.
+8. If the smoke test looks correct, click `开始处理`.
 
 ## Lookup-file validation
 
-Before `Smoke Test` or `Start Processing`, the GUI validates the lookup file:
+Before `烟雾测试` or `开始处理`, the GUI validates the lookup file:
 
 - it cannot be empty
 - it must exist
@@ -116,12 +127,13 @@ Recommended first validation:
 1. Choose a source directory.
 2. Choose an output directory.
 3. Confirm or select a valid `.ced` lookup file.
-4. Click `Smoke Test`.
-5. Confirm the GUI shows:
+4. Choose the desired `reference_mode`.
+5. Click `烟雾测试`.
+6. Confirm the GUI shows:
    - `Processed: 1`
    - `Failed: 0`
-6. Confirm one `.set/.fdt` pair exists under the selected output root.
-7. Open the `.set` in EEGLAB for manual inspection.
+7. Confirm one `.set/.fdt` pair exists under the selected output root.
+8. Open the `.set` in EEGLAB for manual inspection.
 
 ## Command-line usage
 
@@ -139,6 +151,7 @@ cfg = load_preprocess_config();
 cfg.target_sample_rate = 250;
 cfg.highpass_hz = 0.5;
 cfg.lowpass_hz = 45;
+cfg.reference_mode = "average";   % or "m1_m2"
 save_preprocess_config(cfg);
 ```
 
@@ -174,6 +187,7 @@ results = run_preprocess_batch( ...
     'target_sample_rate', 250, ...
     'highpass_hz', 0.5, ...
     'lowpass_hz', 45, ...
+    'reference_mode', "average", ...
     'output_root', "F:\CJZFile\EEG_scriptProcess_Test");
 ```
 
@@ -207,7 +221,7 @@ After a smoke test or batch run, check:
 - the selected `.ced` lookup file is correct
 - `HEO/VEO/EKG/EMG` were removed
 - the `49-51 Hz` notch was applied
-- the `M1/M2` re-reference was applied
+- the rereference behavior matches the selected mode
 - the output folder structure matches the selected source root
 
 ## Runtime limitation in this Codex session

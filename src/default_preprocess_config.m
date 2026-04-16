@@ -10,6 +10,7 @@ cfg.highpass_hz = 0.5;
 cfg.lowpass_hz = 45;
 cfg.notch_band_hz = [49 51];
 cfg.remove_channels = ["HEO" "VEO" "EKG" "EMG"];
+cfg.reference_mode = "average";
 cfg.reference_labels = ["M1" "M2"];
 cfg.overwrite_existing = false;
 cfg.limit_files = 0;
